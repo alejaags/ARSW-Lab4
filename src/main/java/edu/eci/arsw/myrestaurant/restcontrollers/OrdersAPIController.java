@@ -95,6 +95,17 @@ public class OrdersAPIController {
 
             
         }
+        
+        @RequestMapping(path = "/{idmesa}", method = RequestMethod.PUT)
+        public ResponseEntity<?> actualizarOrden(@PathVariable int idmesa, @RequestBody Order o) {
+            try{
+                ros.updateOrder(idmesa, o);
+                return new ResponseEntity<>(HttpStatus.OK);
+            }catch(Exception e){
+                return new ResponseEntity<>(e.getMessage(),HttpStatus.FORBIDDEN);
+            }
+       
+    }
 
         
         
