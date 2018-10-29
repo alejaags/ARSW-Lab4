@@ -9,8 +9,16 @@ function addOrder(order) {
 
     var tableHeader = document.createElement("tr");
     tableHeader.setAttribute("class", "table_header");
+	
+	var PRODUCTS;
     
     var headerRow = document.createElement("th");
+	var DEFAULT_ADDRESS = 'http://localhost:8080'; // XXX
+	var server_url = DEFAULT_ADDRESS + '/orders';
+	
+	
+	
+	
     headerRow.innerHTML = "Product";
     tableHeader.appendChild(headerRow);
     headerRow = document.createElement("th");
@@ -63,7 +71,64 @@ function loadOrders() {
     }
 }
 
+function getProductPrices() {
+    return axios.get(DEFAULT_ADDRESS + '/orders/products');
+}
 
+function getOrders() {
+    return axios.get(DEFAULT_ADDRESS + '/orders');
+}
 
+function clearTables() {
+    document.getElementById('order_tables').innerHTML = '';
+}
 
+function addOrdersFromAPI(orders) {
+    for(i in orders) {
+	ord = constructOrder(orders[i], PRODUCTS);
+	addOrder(ord);
+    }
+}
 
+function constructOrder(order, products) {
+    var ord = {order_id:null, table_id:null, products:[]};
+    ord.order_id = order.tableNumber;
+    ord.table_id = order.tableNumber;
+
+    for(p in order.orderAmountsMap) {
+	var prod = {product: p, quantity: order.orderAmountsMap[p], price:null};
+	prod.price = '$' + products.filter(function (e) {
+	    return e.name === p;
+	})[0].price;
+
+	assert(products.filter(function (e) {
+	    return e.name === p;
+	}).length == 1);
+
+	ord.products.push(prod);
+    }
+
+    return ord;
+}
+
+function assert(condition) {
+    if (condition === false) {
+	console.log('Assertion Error');
+    }
+}
+
+function getData(callback_func) {
+    axios.all([getProductPrices(), getOrders()])
+	.then(axios.spread( function (prices, orders) {
+	    PRODUCTS = prices.data;
+	    callback_func(orders.data);
+	}))
+	.catch(function (error) {
+	    showErrorMessage();
+	});
+}
+
+function showErrorMessage(msg = 'There is a problem with our servers. We apologize for the inconvince, please try again later') {
+    console.log('ERROR: ' + msg);
+    alert('ERROR: ' + msg);
+}
